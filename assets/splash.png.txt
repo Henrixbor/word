@@ -1,0 +1,4 @@
+Placeholder for splash screen
+Size: 1284x2778 (iPhone 14 Pro Max)
+Background: #6366F1 gradient
+Center: Wordgame logo with animation

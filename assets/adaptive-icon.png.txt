@@ -1,0 +1,3 @@
+Placeholder for Android adaptive icon (1024x1024)
+Foreground: Wordgame logo
+Background: #6366F1

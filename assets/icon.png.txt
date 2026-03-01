@@ -1,0 +1,3 @@
+Placeholder for app icon (1024x1024)
+Generate with: icon generator tool or design software
+Should feature: Wordgame logo, colorful gradient background
