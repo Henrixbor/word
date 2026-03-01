@@ -20,7 +20,16 @@
       "bundleIdentifier": "com.wordgame.app",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan QR codes for tournament entry.",
-        "NSMicrophoneUsageDescription": "This app does not use the microphone."
+        "NSMicrophoneUsageDescription": "This app does not use the microphone.",
+        "GADApplicationIdentifier": "ca-app-pub-XXXXX~XXXXX",
+        "SKAdNetworkItems": [
+          {
+            "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
+          }
+        ]
+      },
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-XXXXX~XXXXX"
       }
     },
     "android": {
@@ -31,8 +40,13 @@
       "package": "com.wordgame.app",
       "permissions": [
         "CAMERA",
-        "VIBRATE"
-      ]
+        "VIBRATE",
+        "ACCESS_NETWORK_STATE",
+        "INTERNET"
+      ],
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-XXXXX~XXXXX"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -45,6 +59,19 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#6366F1"
+        }
+      ],
+      [
+        "expo-ads-admob",
+        {
+          "androidAppId": "ca-app-pub-XXXXX~XXXXX",
+          "iosAppId": "ca-app-pub-XXXXX~XXXXX"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Wordgame to use your camera to scan tournament QR codes."
         }
       ]
     ],
