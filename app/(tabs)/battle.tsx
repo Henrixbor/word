@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Animated, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { LinearGradient } from "expo-linear-gradient";
 import { GameMascot } from "../../components/branding/GameMascot";
@@ -17,6 +17,13 @@ import { useAuthStore } from "../../stores/authStore";
 
 const battleArenaHero = require("../../assets/branding/battle-arena-hero.png");
 
+type LastGuessFeedback = {
+  word: string;
+  position: number;
+  enteredTopTen: boolean;
+  isNewBest?: boolean;
+};
+
 export default function BattleScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const [room, setRoom] = useState<DemoRoomResponse["room"] | null>(null);
@@ -30,7 +37,9 @@ export default function BattleScreen() {
   const [inviteQuery, setInviteQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState<string | null>(null);
+  const [lastGuessFeedback, setLastGuessFeedback] = useState<LastGuessFeedback | null>(null);
   const [now, setNow] = useState(Date.now());
+  const boardPulse = useRef(new Animated.Value(0)).current;
   const user = useAuthStore((state) => state.user);
   const setBackendIdentity = useAuthStore((state) => state.setBackendIdentity);
   const currentAvatarId = useAuthStore((state) => state.user?.avatarId);
@@ -233,6 +242,7 @@ export default function BattleScreen() {
     };
     const onRoundStarted = (payload: { room: DemoRoomResponse["room"]; currentRound: number }) => {
       setRoom(payload.room);
+      setLastGuessFeedback(null);
       setStatusNote(`Round ${payload.currentRound} live.`);
     };
     const onRoundCountdown = (payload: { room: DemoRoomResponse["room"]; currentRound: number }) => {
@@ -241,9 +251,16 @@ export default function BattleScreen() {
     };
     const onRoundEnded = (payload: { room: DemoRoomResponse["room"]; completedRound: number; targetWord: string }) => {
       setRoom(payload.room);
+      setLastGuessFeedback(null);
       setStatusNote(`${payload.targetWord.toUpperCase()} was the word.`);
     };
-    const onGuessResult = (payload: { guess: { word: string; position: number }; currentRound: number }) => {
+    const onGuessResult = (payload: { guess: { word: string; position: number }; currentRound: number; isNewBest?: boolean }) => {
+      setLastGuessFeedback({
+        word: payload.guess.word,
+        position: payload.guess.position,
+        enteredTopTen: payload.guess.position <= 10,
+        isNewBest: payload.isNewBest,
+      });
       if (payload.guess.position <= 10) {
         setStatusNote(`${payload.guess.word.toUpperCase()} hit #${payload.guess.position}.`);
       }
@@ -313,10 +330,35 @@ export default function BattleScreen() {
     },
     [room]
   );
+  const topGuessSignature = useMemo(
+    () => topGuesses.map((entry) => `${entry.position}:${entry.word}:${entry.playerName ?? ""}`).join("|"),
+    [topGuesses]
+  );
   const onlineInvitableFriends = useMemo(
     () => onlineFriends.filter((friend) => friend.id !== playerId),
     [onlineFriends, playerId]
   );
+
+  useEffect(() => {
+    if (topGuesses.length <= 1) {
+      boardPulse.setValue(0);
+      return;
+    }
+
+    boardPulse.setValue(0);
+    Animated.sequence([
+      Animated.timing(boardPulse, {
+        toValue: 1,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+      Animated.timing(boardPulse, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [boardPulse, topGuessSignature, topGuesses.length]);
 
   const handleJoin = async () => {
     try {
@@ -522,6 +564,14 @@ export default function BattleScreen() {
       : nextStartCountdown !== null
       ? `${nextStartCountdown}s`
       : "loading";
+  const phaseLabel =
+    room?.phase === "active"
+      ? "Round live"
+      : room?.phase === "countdown"
+      ? "Starting"
+      : room?.phase === "intermission"
+      ? "Round over"
+      : "Waiting";
   const isArenaView = joinState === "joined";
 
   if (isArenaView) {
@@ -557,6 +607,14 @@ export default function BattleScreen() {
               <Text style={styles.arenaStatValue}>{liveStatusLabel}</Text>
             </View>
           </View>
+          <View style={styles.compactStatusRow}>
+            <View style={styles.phaseChip}>
+              <Text style={styles.phaseChipText}>{phaseLabel}</Text>
+            </View>
+            {lastGuessFeedback ? (
+              <Text style={styles.personalStatus}>Best this round: #{lastGuessFeedback.position}</Text>
+            ) : null}
+          </View>
           {statusNote ? <Text style={styles.arenaStatus}>{statusNote}</Text> : null}
           {error ? <Text style={styles.arenaError}>{error}</Text> : null}
         </LinearGradient>
@@ -577,7 +635,21 @@ export default function BattleScreen() {
             </LinearGradient>
           ) : null}
 
-          <View style={styles.topGuessBoard}>
+          <Animated.View
+            style={[
+              styles.topGuessBoard,
+              {
+                transform: [
+                  {
+                    scale: boardPulse.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.015],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
             <View style={styles.boardHeader}>
               <Text style={styles.boardTitle}>Top 10 Guesses</Text>
               <Text style={styles.boardMeta}>
@@ -631,7 +703,24 @@ export default function BattleScreen() {
                 </View>
               );
             })}
-          </View>
+          </Animated.View>
+
+          {lastGuessFeedback ? (
+            <View style={styles.lastGuessCard}>
+              <Text style={styles.lastGuessLabel}>Your last guess</Text>
+              <View style={styles.lastGuessRow}>
+                <Text style={styles.lastGuessWord}>{lastGuessFeedback.word.toUpperCase()}</Text>
+                <Text style={styles.lastGuessRank}>#{lastGuessFeedback.position}</Text>
+              </View>
+              <Text style={styles.lastGuessMeta}>
+                {lastGuessFeedback.enteredTopTen
+                  ? "Made the live top 10."
+                  : lastGuessFeedback.isNewBest
+                  ? "New personal best."
+                  : "Not in the top 10 yet."}
+              </Text>
+            </View>
+          ) : null}
 
           <WordInput
             onSubmit={handleGuess}
@@ -1108,6 +1197,33 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamilyBold,
     fontSize: Typography.sizes.sm,
   },
+  compactStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  phaseChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+  },
+  phaseChipText: {
+    color: "#FFFFFF",
+    fontFamily: Typography.fontFamilySemi,
+    fontSize: Typography.sizes.sm,
+  },
+  personalStatus: {
+    flex: 1,
+    textAlign: "right",
+    color: "#F9D780",
+    fontFamily: Typography.fontFamilySemi,
+    fontSize: Typography.sizes.sm,
+  },
   arenaStatus: {
     marginTop: Spacing.md,
     color: "#F9D780",
@@ -1417,6 +1533,43 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
   },
   emptyGuessMeta: {
+    color: Colors.muted,
+    fontFamily: Typography.fontFamily,
+    fontSize: Typography.sizes.sm,
+  },
+  lastGuessCard: {
+    borderRadius: 20,
+    padding: Spacing.md,
+    backgroundColor: "#FFF4EA",
+    borderWidth: 1,
+    borderColor: "#F2C8AF",
+    gap: 4,
+  },
+  lastGuessLabel: {
+    color: Colors.primaryDark,
+    fontFamily: Typography.fontFamilySemi,
+    fontSize: Typography.sizes.xs,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  lastGuessRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.sm,
+  },
+  lastGuessWord: {
+    color: Colors.text,
+    fontFamily: Typography.fontFamilyBold,
+    fontSize: Typography.sizes.lg,
+    flex: 1,
+  },
+  lastGuessRank: {
+    color: Colors.secondary,
+    fontFamily: Typography.fontFamilyBold,
+    fontSize: Typography.sizes.lg,
+  },
+  lastGuessMeta: {
     color: Colors.muted,
     fontFamily: Typography.fontFamily,
     fontSize: Typography.sizes.sm,
