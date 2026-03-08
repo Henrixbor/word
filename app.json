@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Wordgame",
-    "slug": "wordgame",
+    "name": "Word!",
+    "slug": "word",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -50,6 +50,6 @@
         "origin": false
       }
     },
-    "owner": "wordgame"
+    "owner": "Henrixbor"
   }
 }
