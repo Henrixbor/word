@@ -590,6 +590,12 @@ export default function BattleScreen() {
                   : "Waiting"}
               </Text>
             </View>
+            {topGuesses.length === 1 ? (
+              <View style={styles.emptyGuessState}>
+                <Text style={styles.emptyGuessTitle}>No guesses yet</Text>
+                <Text style={styles.emptyGuessMeta}>Be first to break into the top 10.</Text>
+              </View>
+            ) : null}
             {topGuesses.map((entry, index) => {
               const isPrimarySlot = entry.position === 1;
               const compactMeta =
@@ -1394,6 +1400,26 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.xs,
     textTransform: "uppercase",
     letterSpacing: 1,
+  },
+  emptyGuessState: {
+    borderRadius: 18,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+    backgroundColor: "#FFFDF9",
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: "dashed",
+    gap: 2,
+  },
+  emptyGuessTitle: {
+    color: Colors.text,
+    fontFamily: Typography.fontFamilySemi,
+    fontSize: Typography.sizes.sm,
+  },
+  emptyGuessMeta: {
+    color: Colors.muted,
+    fontFamily: Typography.fontFamily,
+    fontSize: Typography.sizes.sm,
   },
   topGuessRow: {
     flexDirection: "row",
