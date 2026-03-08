@@ -1,8 +1,8 @@
 export const Typography = {
-  fontFamily: "Poppins",
-  fontFamilyBold: "Poppins-Bold",
-  fontFamilySemi: "Poppins-SemiBold",
-  fontFamilyMedium: "Poppins-Medium",
+  fontFamily: "Nunito_600SemiBold",
+  fontFamilyBold: "Fredoka_700Bold",
+  fontFamilySemi: "Fredoka_600SemiBold",
+  fontFamilyMedium: "Nunito_700Bold",
   sizes: {
     xs: 12,
     sm: 14,

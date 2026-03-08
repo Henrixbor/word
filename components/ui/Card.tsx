@@ -1,11 +1,12 @@
 import React from "react";
-import { StyleSheet, View, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { Spacing } from "../../constants/Spacing";
+import { surfaceShadow } from "./surfaceStyles";
 
 type CardProps = {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 };
 
 export const Card: React.FC<CardProps> = ({ children, style }) => {
@@ -15,12 +16,10 @@ export const Card: React.FC<CardProps> = ({ children, style }) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.card,
-    borderRadius: 12,
+    borderRadius: 24,
     padding: Spacing.md,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...surfaceShadow,
   },
 });

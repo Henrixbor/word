@@ -13,9 +13,10 @@ const AnimatedText = Animated.createAnimatedComponent(Text);
 
 type PointsCounterProps = {
   value: number;
+  light?: boolean;
 };
 
-export const PointsCounter: React.FC<PointsCounterProps> = ({ value }) => {
+export const PointsCounter: React.FC<PointsCounterProps> = ({ value, light = false }) => {
   const progress = useSharedValue(1);
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export const PointsCounter: React.FC<PointsCounterProps> = ({ value }) => {
   }));
 
   return (
-    <AnimatedText style={[styles.text, animatedStyle]}>
+    <AnimatedText style={[styles.text, light && styles.textLight, animatedStyle]}>
       {value.toLocaleString()}
     </AnimatedText>
   );
@@ -41,5 +42,8 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamilySemi,
     fontSize: Typography.sizes.lg,
     color: Colors.primaryDark,
+  },
+  textLight: {
+    color: "#FFFFFF",
   },
 });

@@ -1,13 +1,11 @@
-import React, { useRef, useState } from "react";
-import { Dimensions, FlatList, StyleSheet, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import React, { useState } from "react";
+import { Image, ImageBackground, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Button } from "../../components/ui/Button";
+import { strongSurfaceShadow } from "../../components/ui/surfaceStyles";
 import { Colors } from "../../constants/Colors";
 import { Spacing } from "../../constants/Spacing";
 import { Typography } from "../../constants/Typography";
-import { Button } from "../../components/ui/Button";
-import { useRouter } from "expo-router";
-
-const { width } = Dimensions.get("window");
 
 const slides = [
   {
@@ -20,48 +18,41 @@ const slides = [
   },
   {
     title: "Compete & Win",
-    description: "Join battles and climb live leaderboards.",
+    description: "Join battles, refine your reads, and climb live rankings.",
   },
 ];
 
+const onboardingBackground = require("../../assets/branding/loading-hero-02.png");
+const mascotWave = require("../../assets/branding/mascot-wave.png");
+
 export default function OnboardingScreen() {
   const [index, setIndex] = useState(0);
-  const listRef = useRef<FlatList>(null);
   const router = useRouter();
+  const slide = slides[index];
 
   const handleNext = () => {
     if (index < slides.length - 1) {
-      listRef.current?.scrollToIndex({ index: index + 1, animated: true });
-    } else {
-      router.replace("/(tabs)");
+      setIndex((current) => current + 1);
+      return;
     }
+
+    router.replace("/(tabs)");
   };
 
   return (
-    <LinearGradient
-      colors={["#EEF2FF", "#FFFFFF"]}
-      style={styles.container}
-    >
-      <FlatList
-        ref={listRef}
-        data={slides}
-        keyExtractor={(item) => item.title}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={(event) => {
-          const nextIndex = Math.round(event.nativeEvent.contentOffset.x / width);
-          setIndex(nextIndex);
-        }}
-        renderItem={({ item }) => (
-          <View style={styles.slide}>
-            <View style={styles.card}>
-              <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.description}>{item.description}</Text>
-            </View>
+    <ImageBackground source={onboardingBackground} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay} />
+      <View style={styles.slide}>
+        <View style={styles.card}>
+          <View style={styles.mascotWrap}>
+            <Image source={mascotWave} style={styles.mascotImage} resizeMode="contain" />
           </View>
-        )}
-      />
+          <Text style={styles.eyebrow}>Welcome To Word!</Text>
+          <Text style={styles.title}>{slide.title}</Text>
+          <Text style={styles.description}>{slide.description}</Text>
+        </View>
+      </View>
+
       <View style={styles.footer}>
         <View style={styles.dots}>
           {slides.map((_, dotIndex) => (
@@ -76,59 +67,82 @@ export default function OnboardingScreen() {
           onPress={handleNext}
         />
       </View>
-    </LinearGradient>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: "space-between",
+    paddingTop: Spacing.xxl,
+    paddingBottom: Spacing.xl,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(18, 34, 49, 0.38)",
   },
   slide: {
-    width,
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: Spacing.xl,
   },
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    width: "100%",
+    backgroundColor: "rgba(255,252,247,0.9)",
+    borderRadius: 28,
     padding: Spacing.xl,
-    shadowColor: "rgba(15, 23, 42, 0.12)",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.4)",
+    ...strongSurfaceShadow,
+  },
+  mascotWrap: {
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  mascotImage: {
+    width: 116,
+    height: 116,
+  },
+  eyebrow: {
+    color: Colors.primaryDark,
+    fontFamily: Typography.fontFamilySemi,
+    textTransform: "uppercase",
+    letterSpacing: 1.4,
+    fontSize: Typography.sizes.sm,
   },
   title: {
+    marginTop: Spacing.sm,
     fontFamily: Typography.fontFamilyBold,
-    fontSize: Typography.sizes.xl,
+    fontSize: Typography.sizes.xxl,
     color: Colors.text,
-    marginBottom: Spacing.sm,
   },
   description: {
+    marginTop: Spacing.md,
     fontFamily: Typography.fontFamily,
     fontSize: Typography.sizes.md,
     color: Colors.muted,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   footer: {
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
   },
   dots: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 9,
+    height: 9,
+    borderRadius: 999,
     backgroundColor: Colors.primaryLight,
     marginHorizontal: 4,
   },
   activeDot: {
-    width: 20,
+    width: 26,
     backgroundColor: Colors.primary,
   },
 });

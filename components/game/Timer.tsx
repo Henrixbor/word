@@ -5,9 +5,10 @@ import { Typography } from "../../constants/Typography";
 
 type TimerProps = {
   seconds: number;
+  color?: string;
 };
 
-export const Timer: React.FC<TimerProps> = ({ seconds }) => {
+export const Timer: React.FC<TimerProps> = ({ seconds, color = Colors.muted }) => {
   const [remaining, setRemaining] = useState(seconds);
 
   useEffect(() => {
@@ -21,7 +22,7 @@ export const Timer: React.FC<TimerProps> = ({ seconds }) => {
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
   return (
-    <Text style={styles.text}>
+    <Text style={[styles.text, { color }]}>
       {mins}:{secs.toString().padStart(2, "0")}
     </Text>
   );
@@ -30,6 +31,5 @@ export const Timer: React.FC<TimerProps> = ({ seconds }) => {
 const styles = StyleSheet.create({
   text: {
     fontFamily: Typography.fontFamilySemi,
-    color: Colors.muted,
   },
 });

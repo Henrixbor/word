@@ -1,0 +1,7 @@
+appId: com.wordgame.app
+---
+- tapOn: "Open"
+- scrollUntilVisible:
+    element: "Accept"
+    direction: DOWN
+- tapOn: "Accept"

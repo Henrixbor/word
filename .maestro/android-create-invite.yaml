@@ -1,0 +1,12 @@
+appId: com.wordgame.app
+---
+- launchApp
+- tapOn: "Battle"
+- scrollUntilVisible:
+    element: "Create Duo Lobby"
+    direction: DOWN
+- tapOn: "Create Duo Lobby"
+- tapOn: "Invite by username or player ID"
+- inputText: "AlphaHost-7W2WKH"
+- tapOn: "Invite Teammate"
+- assertVisible: "Invite sent to AlphaHost-7W2WKH."

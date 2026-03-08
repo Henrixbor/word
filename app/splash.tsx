@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Image, ImageBackground, StyleSheet, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,9 +8,11 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useRouter } from "expo-router";
-import { Colors } from "../constants/Colors";
 import { Typography } from "../constants/Typography";
 import { useAuthStore } from "../stores/authStore";
+
+const splashBackground = require("../assets/branding/loading-hero-01.png");
+const splashLogo = require("../assets/branding/logo-hero.png");
 
 export default function SplashScreen() {
   const scale = useSharedValue(1);
@@ -48,15 +49,15 @@ export default function SplashScreen() {
   }));
 
   return (
-    <LinearGradient
-      colors={[Colors.gradientStart, Colors.gradientEnd]}
-      style={styles.container}
-    >
+    <ImageBackground source={splashBackground} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay} />
       <Animated.View style={[styles.logo, animatedStyle]}>
-        <Text style={styles.logoText}>WORDGAME</Text>
+        <Image source={splashLogo} style={styles.logoImage} resizeMode="contain" />
       </Animated.View>
-      <Text style={styles.tagline}>Daily word battles, anytime.</Text>
-    </LinearGradient>
+      <View style={styles.taglineBadge}>
+        <Text style={styles.tagline}>Live word battles with a smiling dachshund guide.</Text>
+      </View>
+    </ImageBackground>
   );
 }
 
@@ -66,21 +67,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  logo: {
-    backgroundColor: "rgba(255,255,255,0.18)",
-    paddingVertical: 20,
-    paddingHorizontal: 32,
-    borderRadius: 20,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(24, 34, 56, 0.35)",
   },
-  logoText: {
-    fontFamily: Typography.fontFamilyBold,
-    fontSize: 32,
-    color: "#FFFFFF",
-    letterSpacing: 2,
+  logo: {
+    width: 320,
+    height: 160,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoImage: {
+    width: "100%",
+    height: "100%",
+  },
+  taglineBadge: {
+    marginTop: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: "rgba(16, 40, 61, 0.58)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
   },
   tagline: {
-    marginTop: 24,
     color: "#FFFFFF",
     fontFamily: Typography.fontFamilyMedium,
+    fontSize: 16,
+    textAlign: "center",
+    paddingHorizontal: 28,
   },
 });

@@ -1,35 +1,50 @@
 import React from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
-import { Guess } from "../../stores/gameStore";
+import { StyleSheet, Text, View } from "react-native";
+import { GuessRecord } from "../../lib/gameEngine";
 import { Colors } from "../../constants/Colors";
 import { Spacing } from "../../constants/Spacing";
 import { Typography } from "../../constants/Typography";
 import { SimilarityBar } from "./SimilarityBar";
 
 type GuessListProps = {
-  guesses: Guess[];
+  guesses: GuessRecord[];
 };
 
 export const GuessList: React.FC<GuessListProps> = ({ guesses }) => {
+  const formatOrdinal = (value: number) => {
+    const mod10 = value % 10;
+    const mod100 = value % 100;
+    if (mod10 === 1 && mod100 !== 11) return `${value}st`;
+    if (mod10 === 2 && mod100 !== 12) return `${value}nd`;
+    if (mod10 === 3 && mod100 !== 13) return `${value}rd`;
+    return `${value}th`;
+  };
+
   return (
-    <FlatList
-      data={guesses}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={styles.container}
-      renderItem={({ item, index }) => (
-        <View style={styles.row}>
-          <Text style={styles.rank}>{guesses.length - index}</Text>
-          <Text style={styles.word}>{item.word}</Text>
-          <View style={styles.bar}>
-            <SimilarityBar similarity={item.similarity} />
-          </View>
-          <Text style={styles.score}>{Math.round(item.similarity * 100)}%</Text>
-        </View>
-      )}
-      ListEmptyComponent={
+    <View style={styles.container}>
+      {guesses.length === 0 ? (
         <Text style={styles.empty}>No guesses yet. Start guessing!</Text>
-      }
-    />
+      ) : (
+        guesses.map((item) => (
+          <View key={item.id} style={styles.row}>
+            <View style={styles.rowTop}>
+              <Text style={styles.word}>{item.word}</Text>
+              <Text style={styles.score}>#{item.position}</Text>
+            </View>
+            <View style={styles.bar}>
+              <SimilarityBar similarity={item.similarity} />
+            </View>
+            <View style={styles.metaRow}>
+              <Text style={styles.meta}>
+                {formatOrdinal(item.position)} closest • {item.exactMatches} exact • {item.presentMatches} letters
+              </Text>
+              <Text style={[styles.badge, styles[item.temperature]]}>{item.temperature}</Text>
+            </View>
+            <Text style={styles.message}>{item.message}</Text>
+          </View>
+        ))
+      )}
+    </View>
   );
 };
 
@@ -39,34 +54,64 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   row: {
-    flexDirection: "row",
-    alignItems: "center",
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: Spacing.sm,
+    borderRadius: 18,
+    padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
+    gap: Spacing.sm,
   },
-  rank: {
-    width: 32,
-    textAlign: "center",
-    fontFamily: Typography.fontFamilySemi,
-    color: Colors.muted,
+  rowTop: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   word: {
     flex: 1,
     fontFamily: Typography.fontFamilySemi,
     color: Colors.text,
+    letterSpacing: 1.3,
   },
   bar: {
-    flex: 1.2,
-    paddingHorizontal: Spacing.sm,
+    width: "100%",
   },
   score: {
-    width: 50,
+    width: 74,
     textAlign: "right",
-    fontFamily: Typography.fontFamilyMedium,
+    fontFamily: Typography.fontFamilyBold,
+    color: Colors.text,
+  },
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  meta: {
     color: Colors.muted,
+    fontFamily: Typography.fontFamily,
+    fontSize: Typography.sizes.sm,
+  },
+  badge: {
+    textTransform: "uppercase",
+    fontFamily: Typography.fontFamilySemi,
+    fontSize: Typography.sizes.xs,
+    letterSpacing: 0.8,
+  },
+  cold: {
+    color: Colors.cold,
+  },
+  warm: {
+    color: Colors.warning,
+  },
+  hot: {
+    color: Colors.hot,
+  },
+  perfect: {
+    color: Colors.perfect,
+  },
+  message: {
+    color: Colors.text,
+    fontFamily: Typography.fontFamily,
+    fontSize: Typography.sizes.sm,
   },
   empty: {
     textAlign: "center",

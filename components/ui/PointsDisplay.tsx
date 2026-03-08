@@ -4,11 +4,14 @@ import { PointsCounter } from "../animations/PointsCounter";
 import { Colors } from "../../constants/Colors";
 import { Typography } from "../../constants/Typography";
 
-export const PointsDisplay: React.FC<{ value: number }> = ({ value }) => {
+export const PointsDisplay: React.FC<{ value: number; light?: boolean }> = ({
+  value,
+  light = false,
+}) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Points</Text>
-      <PointsCounter value={value} />
+      <Text style={[styles.label, light && styles.labelLight]}>Points</Text>
+      <PointsCounter value={value} light={light} />
     </View>
   );
 };
@@ -21,5 +24,8 @@ const styles = StyleSheet.create({
     color: Colors.muted,
     fontFamily: Typography.fontFamilyMedium,
     fontSize: Typography.sizes.xs,
+  },
+  labelLight: {
+    color: "rgba(255,255,255,0.8)",
   },
 });

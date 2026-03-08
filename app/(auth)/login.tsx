@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { ImageBackground, StyleSheet, Text, TextInput, View } from "react-native";
+import { useRouter } from "expo-router";
 import { Button } from "../../components/ui/Button";
+import { GameMascot } from "../../components/branding/GameMascot";
+import { strongSurfaceShadow } from "../../components/ui/surfaceStyles";
 import { Colors } from "../../constants/Colors";
 import { Spacing } from "../../constants/Spacing";
 import { Typography } from "../../constants/Typography";
 import { useAuthStore } from "../../stores/authStore";
-import { useRouter } from "expo-router";
+
+const authBackground = require("../../assets/branding/loading-hero-01.png");
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -15,43 +18,49 @@ export default function LoginScreen() {
   const router = useRouter();
 
   return (
-    <LinearGradient colors={["#F8FAFF", "#FFFFFF"]} style={styles.container}>
-      <Text style={styles.title}>Welcome back</Text>
-      <Text style={styles.subtitle}>Log in to continue your streak.</Text>
+    <ImageBackground source={authBackground} style={styles.container} resizeMode="cover">
+      <View style={styles.overlay} />
+      <View style={styles.mascotWrap}>
+        <GameMascot size={116} />
+      </View>
+      <View style={styles.panel}>
+        <Text style={styles.eyebrow}>Return</Text>
+        <Text style={styles.title}>Welcome back</Text>
+        <Text style={styles.subtitle}>Log in and get back into the live arena.</Text>
 
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={Colors.muted}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={Colors.muted}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={styles.form}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={Colors.muted}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={Colors.muted}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+          <Button
+            title="Log In"
+            onPress={() => {
+              void login(email || "player").then(() => router.replace("/(tabs)"));
+            }}
+          />
+        </View>
+
         <Button
-          title="Log In"
-          onPress={() => {
-            login(email || "player@wordgame.com");
-            router.replace("/(tabs)");
-          }}
+          title="Create Account"
+          variant="secondary"
+          onPress={() => router.push("/(auth)/register")}
         />
       </View>
-
-      <Button
-        title="Create Account"
-        variant="ghost"
-        onPress={() => router.push("/(auth)/register")}
-      />
-    </LinearGradient>
+    </ImageBackground>
   );
 }
 
@@ -61,26 +70,54 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     justifyContent: "center",
   },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(24, 33, 50, 0.46)",
+  },
+  panel: {
+    backgroundColor: "rgba(255,249,240,0.92)",
+    borderRadius: 30,
+    padding: Spacing.xl,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.32)",
+    ...strongSurfaceShadow,
+  },
+  mascotWrap: {
+    position: "absolute",
+    right: 28,
+    top: 88,
+  },
+  eyebrow: {
+    fontFamily: Typography.fontFamilySemi,
+    color: Colors.primaryDark,
+    textTransform: "uppercase",
+    letterSpacing: 1.3,
+    fontSize: Typography.sizes.sm,
+  },
   title: {
+    marginTop: Spacing.xs,
     fontFamily: Typography.fontFamilyBold,
-    fontSize: Typography.sizes.xl,
+    fontSize: Typography.sizes.xxl,
     color: Colors.text,
   },
   subtitle: {
-    marginTop: 6,
+    marginTop: Spacing.sm,
     color: Colors.muted,
     fontFamily: Typography.fontFamily,
+    lineHeight: 22,
   },
   form: {
     marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
     gap: Spacing.md,
   },
   input: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: Spacing.sm,
+    backgroundColor: Colors.card,
+    borderRadius: 18,
+    padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
     fontFamily: Typography.fontFamily,
+    color: Colors.text,
   },
 });

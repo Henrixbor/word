@@ -1,0 +1,9 @@
+appId: com.wordgame.app
+---
+- launchApp
+- tapOn: "Battle"
+- scrollUntilVisible:
+    element: "Join Duo Queue"
+    direction: DOWN
+- tapOn: "Join Duo Queue"
+- assertVisible: "Duo queued. Waiting for another full team."

@@ -9,7 +9,7 @@ type ConfettiProps = {
 export const Confetti: React.FC<ConfettiProps> = ({ visible }) => {
   if (!visible) return null;
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={styles.container}>
       <LottieView
         source={require("../../assets/confetti.json")}
         autoPlay
@@ -25,6 +25,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
+    pointerEvents: "none",
   },
   animation: {
     width: 320,

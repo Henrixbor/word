@@ -40,7 +40,9 @@ export default function ServerSelectionScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    testServers();
+    void testServers();
+    // testServers intentionally runs once on mount for this static diagnostics screen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pingServer = async (url: string): Promise<number> => {
@@ -278,13 +280,15 @@ export default function ServerSelectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.background,
   },
   header: {
     padding: Spacing.xl,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.backgroundStrong,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Colors.border,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   title: {
     fontSize: 28,
@@ -297,12 +301,12 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   autoSelectCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.card,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.md,
     padding: Spacing.md,
-    borderRadius: 12,
-    borderWidth: 2,
+    borderRadius: 20,
+    borderWidth: 1,
     borderColor: Colors.primary + '40',
   },
   autoSelectLeft: {
@@ -315,7 +319,7 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -364,11 +368,11 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   serverCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: Colors.card,
+    borderRadius: 22,
     marginBottom: Spacing.md,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.border,
     overflow: 'hidden',
   },
   serverCardSelected: {
@@ -444,11 +448,11 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   selectedInfo: {
-    backgroundColor: Colors.primary + '20',
+    backgroundColor: Colors.primary + '16',
     marginHorizontal: Spacing.md,
     marginTop: Spacing.md,
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.primary,
   },
@@ -473,12 +477,12 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   infoCard: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.surfaceMuted,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.md,
     marginBottom: Spacing.xl,
     padding: Spacing.md,
-    borderRadius: 12,
+    borderRadius: 20,
   },
   infoTitle: {
     fontSize: 16,

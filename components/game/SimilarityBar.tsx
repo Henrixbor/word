@@ -34,19 +34,24 @@ export const SimilarityBar: React.FC<SimilarityBarProps> = ({ similarity }) => {
       <Animated.View
         style={[styles.fill, animatedStyle, { backgroundColor: similarityToColor(similarity) }]}
       />
+      <View style={styles.gloss} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   track: {
-    height: 10,
+    height: 12,
     borderRadius: 999,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#D9E3F1",
     overflow: "hidden",
   },
   fill: {
     height: "100%",
     borderRadius: 999,
+  },
+  gloss: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
 });

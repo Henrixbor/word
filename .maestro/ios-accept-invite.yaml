@@ -1,0 +1,9 @@
+appId: com.wordgame.app
+---
+- launchApp
+- tapOn: "Battle"
+- scrollUntilVisible:
+    element: "Accept"
+    direction: DOWN
+- tapOn: "Accept"
+- assertVisible: "Joined BetaMate-H0H7XA's duo lobby."
