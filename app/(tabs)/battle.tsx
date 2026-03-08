@@ -23,7 +23,6 @@ export default function BattleScreen() {
   const [joinState, setJoinState] = useState<"idle" | "joining" | "joined">("idle");
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string | null>(null);
-  const [teamName, setTeamName] = useState<string | null>(null);
   const [duoLobby, setDuoLobby] = useState<DuoLobby | null>(null);
   const [duoInvites, setDuoInvites] = useState<DuoLobby[]>([]);
   const [onlineFriends, setOnlineFriends] = useState<FriendEntry[]>([]);
@@ -271,31 +270,10 @@ export default function BattleScreen() {
   }, [playerName]);
 
   const leaderboard = useMemo(() => room?.leaderboard ?? [], [room]);
-  const currentPlayer = useMemo(
-    () => room?.players.find((entry) => entry.playerId === playerId) ?? null,
-    [playerId, room?.players]
-  );
-  const currentTeam = useMemo(
-    () => leaderboard.find((entry) => entry.teamId === currentPlayer?.teamId) ?? null,
-    [currentPlayer?.teamId, leaderboard]
-  );
   const isDuoHost = duoLobby?.host.playerId === (playerId ?? useAuthStore.getState().user?.id);
   const hasReadyTeammate = Boolean(duoLobby?.teammate);
   const hasPendingInvite = Boolean(duoLobby?.invitedPlayer);
   const inDuoLobbyView = joinState !== "joined" && showDuoLobbyView;
-  const rivalTeam = useMemo(() => {
-    if (!leaderboard.length) return null;
-    if (!currentTeam) return leaderboard[0] ?? null;
-    const leadingOtherTeam = leaderboard.find((entry) => entry.teamId !== currentTeam.teamId);
-    if (currentTeam.rank === 1) {
-      return leadingOtherTeam ?? null;
-    }
-    return leaderboard[0]?.teamId === currentTeam.teamId ? leadingOtherTeam ?? null : leaderboard[0] ?? null;
-  }, [currentTeam, leaderboard]);
-  const teammate = useMemo(
-    () => currentTeam?.players.find((entry) => entry.playerId !== playerId) ?? null,
-    [currentTeam, playerId]
-  );
   const topGuesses = useMemo(
     () => {
       const winningEntry = room?.topGuesses?.find((entry) => entry.position === 1);
@@ -328,7 +306,6 @@ export default function BattleScreen() {
       const response = await api.joinDemoRoom(alias);
       setPlayerId(response.player.id);
       setPlayerName(response.player.username);
-      setTeamName(response.teamName);
       setBackendIdentity(response.token, response.player);
       setJoinState("joined");
       const socket = getSocket();
@@ -518,22 +495,23 @@ export default function BattleScreen() {
           <View style={styles.arenaHeaderTop}>
             <View style={styles.arenaHeaderCopy}>
               <Text style={styles.arenaTitle}>Guess The Right Word</Text>
-              <Text style={styles.arenaSubtitle}>{playerName} • {currentPlayer?.teamName ?? teamName ?? "Team"}</Text>
+              <Text style={styles.arenaSubtitle}>{playerName}</Text>
             </View>
-            <GameMascot size={76} />
+            <View style={styles.roundBadge}>
+              <Text style={styles.roundBadgeLabel}>Round</Text>
+              <Text style={styles.roundBadgeValue}>
+                {room?.currentRound ?? 0}/{room?.totalRounds ?? 10}
+              </Text>
+            </View>
           </View>
           <View style={styles.arenaStatsRow}>
             <View style={styles.arenaStatPill}>
-              <Text style={styles.arenaStatLabel}>Room</Text>
-              <Text style={styles.arenaStatValue}>{room?.roomCode ?? "..."}</Text>
-            </View>
-            <View style={styles.arenaStatPill}>
-              <Text style={styles.arenaStatLabel}>Team</Text>
-              <Text style={styles.arenaStatValue}>{currentPlayer?.teamName ?? teamName ?? "..."}</Text>
-            </View>
-            <View style={styles.arenaStatPill}>
-              <Text style={styles.arenaStatLabel}>Players</Text>
-              <Text style={styles.arenaStatValue}>{room?.playerCount ?? 0}</Text>
+              <Text style={styles.arenaStatLabel}>Word</Text>
+              <Text style={styles.arenaStatValue}>
+                {room?.phase === "intermission" && room?.lastRoundWinner?.word
+                  ? room.lastRoundWinner.word.toUpperCase()
+                  : "???"}
+              </Text>
             </View>
             <View style={styles.arenaStatPill}>
               <Text style={styles.arenaStatLabel}>Clock</Text>
@@ -545,77 +523,34 @@ export default function BattleScreen() {
         </LinearGradient>
 
         <View style={styles.section}>
-          <Card style={styles.card}>
-          <Text style={styles.cardTitle}>Live Round</Text>
-          <View style={styles.phaseBanner}>
-            <Text style={styles.phaseEyebrow}>Arena Flow</Text>
-            <Text style={styles.phaseTitle}>
-              {room?.phase === "active"
-                ? `Round ${room.currentRound} of ${room.totalRounds}`
-                : room?.phase === "countdown"
-                ? `Round ${room?.currentRound ?? 0} starts in ${phaseCountdown ?? 0}`
-                : room?.phase === "intermission"
-                ? `${room?.lastRoundWinner?.playerName ?? "Someone"} won round ${room?.currentRound ?? 0}`
-                : `Lobby opens in ${nextStartCountdown ?? 0}s`}
-            </Text>
-            <Text style={styles.cardText}>
-              {room?.phase === "active"
-                ? "Guess every 3 seconds."
-                : room?.phase === "countdown"
-                ? "Get ready."
-                : room?.phase === "intermission"
-                ? `${(room?.lastRoundWinner?.word ?? "").toUpperCase()} solved it.`
-                : "Waiting for teams."}
-            </Text>
-          </View>
-
-          <View style={styles.duoStatusRow}>
-            <View style={styles.duoStatusCard}>
-              <Text style={styles.duoStatusEyebrow}>Your Duo</Text>
-              <Text style={styles.duoStatusTitle}>{currentTeam?.teamName ?? teamName ?? "Matching..."}</Text>
-              <View style={styles.duoRosterRow}>
-                <Avatar
-                  name={playerName ?? "You"}
-                  size={34}
-                  avatarId={currentAvatarId ?? getAvatarIdForKey(playerId)}
-                />
-                <Avatar
-                  name={teammate?.playerName ?? "Waiting"}
-                  size={34}
-                  avatarId={getAvatarIdForKey(teammate?.playerId ?? teammate?.playerName)}
-                />
-              </View>
-              <Text style={styles.duoStatusMeta}>
-                {playerName}
-                {teammate ? ` + ${teammate.playerName}` : " + teammate"}
-              </Text>
-              <Text style={styles.duoStatusValue}>{currentTeam ? `${currentTeam.points} pts • #${currentTeam.rank}` : "Queueing"}</Text>
-            </View>
-
-            <View style={styles.duoStatusCard}>
-              <Text style={styles.duoStatusEyebrow}>Race</Text>
-              <Text style={styles.duoStatusTitle}>
-                {rivalTeam ? `${currentTeam?.teamName ?? "Your duo"} vs ${rivalTeam.teamName}` : "Waiting for rivals"}
-              </Text>
-              <Text style={styles.duoStatusMeta}>
-                {rivalTeam ? `${currentTeam?.points ?? 0} - ${rivalTeam.points} pts` : "Waiting"}
-              </Text>
-              <Text style={styles.duoStatusValue}>
-                {currentTeam?.roundBestPosition ? `Best #${currentTeam.roundBestPosition}` : "No top 10 yet"}
-              </Text>
-            </View>
-          </View>
-
           {room?.phase === "intermission" && room.lastRoundWinner ? (
             <LinearGradient colors={["#D96C47", "#F4C95D"]} style={styles.winnerBanner}>
-              <Text style={styles.winnerLabel}>Round Winner</Text>
-              <Text style={styles.winnerName}>{room.lastRoundWinner.playerName}</Text>
-              <Text style={styles.winnerWord}>{(room.lastRoundWinner.word || "").toUpperCase()} solved it.</Text>
+              <Text style={styles.winnerLabel}>Round won by {room.lastRoundWinner.playerName}</Text>
+              <Text style={styles.winnerWord}>{(room.lastRoundWinner.word || "").toUpperCase()}</Text>
+              <View style={styles.intermissionScoreRow}>
+                {leaderboard.slice(0, 2).map((entry) => (
+                  <View key={entry.teamId} style={styles.intermissionScoreCard}>
+                    <Text style={styles.intermissionScoreName}>{entry.teamName}</Text>
+                    <Text style={styles.intermissionScoreValue}>{entry.points}</Text>
+                  </View>
+                ))}
+              </View>
             </LinearGradient>
           ) : null}
 
           <View style={styles.topGuessBoard}>
-            <Text style={styles.boardTitle}>Top 10 Closest Guesses</Text>
+            <View style={styles.boardHeader}>
+              <Text style={styles.boardTitle}>Top 10 Guesses</Text>
+              <Text style={styles.boardMeta}>
+                {room?.phase === "active"
+                  ? "Live"
+                  : room?.phase === "countdown"
+                  ? "Starting"
+                  : room?.phase === "intermission"
+                  ? "Scoring"
+                  : "Waiting"}
+              </Text>
+            </View>
             {topGuesses.map((entry, index) => {
               const isPrimarySlot = entry.position === 1;
               const compactMeta =
@@ -658,13 +593,12 @@ export default function BattleScreen() {
             placeholder="Guess any word"
             helperText={
               error ??
-              (isRoundActive ? "One guess every 3 seconds." : room?.phase === "countdown" ? "3, 2, 1..." : "Wait for the round to start.")
+              (isRoundActive ? "One guess every 3 seconds." : room?.phase === "countdown" ? "3, 2, 1..." : room?.phase === "intermission" ? "Next round soon." : "Waiting for the next round.")
             }
             disabled={!isRoundActive || joinState !== "joined"}
             submitLabel="Send Guess"
             autoFocus={isRoundActive && joinState === "joined"}
           />
-        </Card>
         </View>
       </ScrollView>
     );
@@ -1062,7 +996,7 @@ const styles = StyleSheet.create({
   },
   arenaHeaderTop: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: Spacing.md,
   },
@@ -1078,16 +1012,38 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     color: "rgba(255,255,255,0.82)",
     fontFamily: Typography.fontFamily,
-    lineHeight: 22,
+    lineHeight: 20,
+  },
+  roundBadge: {
+    minWidth: 78,
+    borderRadius: 18,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    alignItems: "center",
+  },
+  roundBadgeLabel: {
+    color: "rgba(255,255,255,0.72)",
+    fontFamily: Typography.fontFamily,
+    fontSize: Typography.sizes.xs,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  roundBadgeValue: {
+    marginTop: 2,
+    color: "#FFFFFF",
+    fontFamily: Typography.fontFamilyBold,
+    fontSize: Typography.sizes.lg,
   },
   arenaStatsRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: Spacing.sm,
     marginTop: Spacing.lg,
   },
   arenaStatPill: {
-    width: "47%",
+    flex: 1,
     borderRadius: 18,
     padding: Spacing.md,
     backgroundColor: "rgba(255,255,255,0.12)",
@@ -1345,7 +1301,30 @@ const styles = StyleSheet.create({
   },
   winnerWord: {
     color: "#183A4A",
+    fontFamily: Typography.fontFamilyBold,
+    fontSize: Typography.sizes.xl,
+  },
+  intermissionScoreRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  intermissionScoreCard: {
+    flex: 1,
+    borderRadius: 18,
+    padding: Spacing.md,
+    backgroundColor: "rgba(255,255,255,0.32)",
+  },
+  intermissionScoreName: {
+    color: "#183A4A",
     fontFamily: Typography.fontFamilySemi,
+    fontSize: Typography.sizes.sm,
+  },
+  intermissionScoreValue: {
+    marginTop: 4,
+    color: "#183A4A",
+    fontFamily: Typography.fontFamilyBold,
+    fontSize: Typography.sizes.xl,
   },
   topGuessBoard: {
     backgroundColor: "#FFF7EE",
@@ -1355,6 +1334,12 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     gap: 6,
   },
+  boardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 2,
+  },
   streamWrap: {
     marginTop: Spacing.sm,
     gap: Spacing.sm,
@@ -1363,6 +1348,13 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontFamily: Typography.fontFamilyBold,
     fontSize: Typography.sizes.md,
+  },
+  boardMeta: {
+    color: Colors.muted,
+    fontFamily: Typography.fontFamilySemi,
+    fontSize: Typography.sizes.xs,
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   topGuessRow: {
     flexDirection: "row",
