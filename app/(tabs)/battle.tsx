@@ -98,6 +98,25 @@ export default function BattleScreen() {
     await loadRoom();
   }, []);
 
+  useEffect(() => {
+    const backendToken = user?.backendToken;
+    const roomCode = room?.roomCode;
+    if (!backendToken || joinState !== "joined" || !roomCode) {
+      return;
+    }
+
+    const socket = getSocket();
+    const resubscribeArena = () => {
+      socket.emit("subscribe_player", { token: backendToken });
+      socket.emit("join_room", { roomCode, token: backendToken });
+    };
+
+    socket.on("connect", resubscribeArena);
+    return () => {
+      socket.off("connect", resubscribeArena);
+    };
+  }, [joinState, room?.roomCode, user?.backendToken]);
+
   const loadDuoState = useCallback(async (tokenOverride?: string) => {
     const token = tokenOverride ?? useAuthStore.getState().user?.backendToken;
     if (!token) return;
@@ -452,11 +471,31 @@ export default function BattleScreen() {
 
   const handleGuess = (value: string) => {
     const socket = getSocket();
-    if (!socket.connected) {
+    const backendToken = useAuthStore.getState().user?.backendToken;
+    const roomCode = room?.roomCode;
+
+    if (!backendToken || joinState !== "joined" || !roomCode) {
       setError("Join the arena before guessing.");
       return;
     }
-    socket.emit("submit_guess", { guess: value });
+
+    const sendGuess = () => {
+      socket.emit("submit_guess", { guess: value });
+    };
+
+    if (!socket.connected) {
+      socket.auth = { token: backendToken };
+      socket.connect();
+      socket.once("connect", () => {
+        socket.emit("subscribe_player", { token: backendToken });
+        socket.emit("join_room", { roomCode, token: backendToken });
+        sendGuess();
+      });
+    } else {
+      socket.emit("subscribe_player", { token: backendToken });
+      socket.emit("join_room", { roomCode, token: backendToken });
+      sendGuess();
+    }
     setError(null);
   };
 
